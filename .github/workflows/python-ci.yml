@@ -4,12 +4,19 @@ on: [push]
 
 jobs:
   build:
+<<<<<<< HEAD
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         python-version: ["3.10"]   # change if you used another version
+=======
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]  # replace with your Python version
+>>>>>>> 2ce722a (Add GitHub Actions workflow for CI)
 
     steps:
     - uses: actions/checkout@v3
@@ -21,6 +28,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+<<<<<<< HEAD
         python -m pip install --upgrade pip
         pip install pytest flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -32,3 +40,14 @@ jobs:
     - name: Run PyTest
       run: |
         pytest
+=======
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt
+        pip install pytest flake8
+
+    - name: Run flake8
+      run: flake8 .
+
+    - name: Run pytest
+      run: pytest
+>>>>>>> 2ce722a (Add GitHub Actions workflow for CI)
