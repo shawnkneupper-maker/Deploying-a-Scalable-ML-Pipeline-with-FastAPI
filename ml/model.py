@@ -1,9 +1,10 @@
 import pickle
-from sklearn.metrics import fbeta_score, precision_score, recall_score
-from ml.data import process_data
-# TODO: add necessary import
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, fbeta_score
 
-# Optional: implement hyperparameter tuning.
+
 def train_model(X_train, y_train):
     """
     Trains a machine learning model and returns it.
@@ -14,115 +15,140 @@ def train_model(X_train, y_train):
         Training data.
     y_train : np.array
         Labels.
+
     Returns
     -------
     model
         Trained machine learning model.
     """
-    # TODO: implement the function
-    pass
 
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X_train, y_train)
 
-def compute_model_metrics(y, preds):
-    """
-    Validates the trained machine learning model using precision, recall, and F1.
-
-    Inputs
-    ------
-    y : np.array
-        Known labels, binarized.
-    preds : np.array
-        Predicted labels, binarized.
-    Returns
-    -------
-    precision : float
-    recall : float
-    fbeta : float
-    """
-    fbeta = fbeta_score(y, preds, beta=1, zero_division=1)
-    precision = precision_score(y, preds, zero_division=1)
-    recall = recall_score(y, preds, zero_division=1)
-    return precision, recall, fbeta
+    return model
 
 
 def inference(model, X):
-    """ Run model inferences and return the predictions.
+    """
+    Run model inferences and return the predictions.
 
     Inputs
     ------
-    model : ???
-        Trained machine learning model.
+    model : machine learning model
+        Trained model.
     X : np.array
         Data used for prediction.
+
     Returns
     -------
     preds : np.array
         Predictions from the model.
     """
-    # TODO: implement the function
-    pass
 
-def save_model(model, path):
-    """ Serializes model to a file.
+    preds = model.predict(X)
+    return preds
 
-    Inputs
-    ------
-    model
-        Trained machine learning model or OneHotEncoder.
-    path : str
-        Path to save pickle file.
+
+def compute_model_metrics(y, preds):
     """
-    # TODO: implement the function
-    pass
-
-def load_model(path):
-    """ Loads pickle file from `path` and returns it."""
-    # TODO: implement the function
-    pass
-
-
-def performance_on_categorical_slice(
-    data, column_name, slice_value, categorical_features, label, encoder, lb, model
-):
-    """ Computes the model metrics on a slice of the data specified by a column name and
-
-    Processes the data using one hot encoding for the categorical features and a
-    label binarizer for the labels. This can be used in either training or
-    inference/validation.
+    Validates the trained machine learning model using precision, recall,
+    and F1 score.
 
     Inputs
     ------
-    data : pd.DataFrame
-        Dataframe containing the features and label. Columns in `categorical_features`
-    column_name : str
-        Column containing the sliced feature.
-    slice_value : str, int, float
-        Value of the slice feature.
-    categorical_features: list
-        List containing the names of the categorical features (default=[])
-    label : str
-        Name of the label column in `X`. If None, then an empty array will be returned
-        for y (default=None)
-    encoder : sklearn.preprocessing._encoders.OneHotEncoder
-        Trained sklearn OneHotEncoder, only used if training=False.
-    lb : sklearn.preprocessing._label.LabelBinarizer
-        Trained sklearn LabelBinarizer, only used if training=False.
-    model : ???
-        Model used for the task.
+    y : np.array
+        Known labels.
+    preds : np.array
+        Predicted labels.
 
     Returns
     -------
     precision : float
     recall : float
     fbeta : float
-
     """
-    # TODO: implement the function
-    X_slice, y_slice, _, _ = process_data(
-        # your code here
-        # for input data, use data in column given as "column_name", with the slice_value 
-        # use training = False
-    )
-    preds = None # your code here to get prediction on X_slice using the inference function
-    precision, recall, fbeta = compute_model_metrics(y_slice, preds)
+
+    precision = precision_score(y, preds)
+    recall = recall_score(y, preds)
+    fbeta = fbeta_score(y, preds, beta=1)
+
     return precision, recall, fbeta
+
+
+def save_model(model, encoder, lb,
+               model_path="model/model.pkl",
+               encoder_path="model/encoder.pkl",
+               lb_path="model/lb.pkl"):
+    """
+    Save model and encoders using pickle.
+    """
+
+    with open(model_path, "wb") as f:
+        pickle.dump(model, f)
+
+    with open(encoder_path, "wb") as f:
+        pickle.dump(encoder, f)
+
+    with open(lb_path, "wb") as f:
+        pickle.dump(lb, f)
+
+
+def load_model(model_path="model/model.pkl",
+               encoder_path="model/encoder.pkl",
+               lb_path="model/lb.pkl"):
+    """
+    Load model and encoders.
+    """
+
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
+
+    with open(encoder_path, "rb") as f:
+        encoder = pickle.load(f)
+
+    with open(lb_path, "rb") as f:
+        lb = pickle.load(f)
+
+    return model, encoder, lb
+
+
+def performance_on_categorical_slice(
+        model, X, y, dataframe, categorical_feature):
+    """
+    Computes model performance on slices of the data defined by a categorical feature.
+
+    Inputs
+    ------
+    model : trained model
+    X : np.array
+        Processed features
+    y : np.array
+        True labels
+    dataframe : pd.DataFrame
+        Original dataframe
+    categorical_feature : str
+        Feature to slice on
+    """
+
+    results = {}
+
+    categories = dataframe[categorical_feature].unique()
+
+    for category in categories:
+
+        slice_df = dataframe[dataframe[categorical_feature] == category]
+
+        X_slice = X[slice_df.index]
+        y_slice = y[slice_df.index]
+
+        preds = inference(model, X_slice)
+
+        precision, recall, fbeta = compute_model_metrics(y_slice, preds)
+
+        results[category] = {
+            "precision": precision,
+            "recall": recall,
+            "fbeta": fbeta
+        }
+
+    return results
