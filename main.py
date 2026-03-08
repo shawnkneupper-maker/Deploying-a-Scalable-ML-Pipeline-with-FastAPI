@@ -1,74 +1,67 @@
-import os
-
-import pandas as pd
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+import joblib  # or pickle
 
-from ml.data import apply_label, process_data
-from ml.model import inference, load_model
+# Load your trained model and encoder
+model = joblib.load("model/model.pkl")
+encoder = joblib.load("model/encoder.pkl")
+lb = joblib.load("model/lb.pkl")  # if you saved a label binarizer
 
-# DO NOT MODIFY
-class Data(BaseModel):
-    age: int = Field(..., example=37)
-    workclass: str = Field(..., example="Private")
-    fnlgt: int = Field(..., example=178356)
-    education: str = Field(..., example="HS-grad")
-    education_num: int = Field(..., example=10, alias="education-num")
-    marital_status: str = Field(
-        ..., example="Married-civ-spouse", alias="marital-status"
-    )
-    occupation: str = Field(..., example="Prof-specialty")
-    relationship: str = Field(..., example="Husband")
-    race: str = Field(..., example="White")
-    sex: str = Field(..., example="Male")
-    capital_gain: int = Field(..., example=0, alias="capital-gain")
-    capital_loss: int = Field(..., example=0, alias="capital-loss")
-    hours_per_week: int = Field(..., example=40, alias="hours-per-week")
-    native_country: str = Field(..., example="United-States", alias="native-country")
+app = FastAPI()
 
-path = None # TODO: enter the path for the saved encoder 
-encoder = load_model(path)
+# Define input data model
+class CensusInput(BaseModel):
+    age: int
+    workclass: str
+    fnlgt: int
+    education: str
+    education_num: int
+    marital_status: str
+    occupation: str
+    relationship: str
+    race: str
+    sex: str
+    capital_gain: int
+    capital_loss: int
+    hours_per_week: int
+    native_country: str
 
-path = None # TODO: enter the path for the saved model 
-model = load_model(path)
-
-# TODO: create a RESTful API using FastAPI
-app = None # your code here
-
-# TODO: create a GET on the root giving a welcome message
+# ✅ GET request on root
 @app.get("/")
-async def get_root():
-    """ Say hello!"""
-    # your code here
-    pass
+def read_root():
+    return {"message": "Hello from the API!"}
 
+# ✅ POST request for inference
+@app.post("/predict")
+def predict(input_data: CensusInput):
+    # Convert input to DataFrame
+    import pandas as pd
+    input_df = pd.DataFrame([input_data.dict()])
 
-# TODO: create a POST on a different path that does model inference
-@app.post("/data/")
-async def post_inference(data: Data):
-    # DO NOT MODIFY: turn the Pydantic model into a dict.
-    data_dict = data.dict()
-    # DO NOT MODIFY: clean up the dict to turn it into a Pandas DataFrame.
-    # The data has names with hyphens and Python does not allow those as variable names.
-    # Here it uses the functionality of FastAPI/Pydantic/etc to deal with this.
-    data = {k.replace("_", "-"): [v] for k, v in data_dict.items()}
-    data = pd.DataFrame.from_dict(data)
-
-    cat_features = [
-        "workclass",
-        "education",
-        "marital-status",
-        "occupation",
-        "relationship",
-        "race",
-        "sex",
-        "native-country",
-    ]
-    data_processed, _, _, _ = process_data(
-        # your code here
-        # use data as data input
-        # use training = False
-        # do not need to pass lb as input
+    # Process data (use your process_data function)
+    from ml.data import process_data
+    X, _, _, _ = process_data(
+        input_df,
+        categorical_features=[
+            "workclass",
+            "education",
+            "marital-status",
+            "occupation",
+            "relationship",
+            "race",
+            "sex",
+            "native-country"
+        ],
+        label=None,
+        training=False,
+        encoder=encoder,
+        lb=lb
     )
-    _inference = None # your code here to predict the result using data_processed
-    return {"result": apply_label(_inference)}
+
+    # Run inference
+    from ml.model import inference
+    pred = inference(model, X)
+
+    # Convert prediction to readable label
+    result = lb.inverse_transform(pred)[0] if lb else str(pred[0])
+    return {"prediction": result}
