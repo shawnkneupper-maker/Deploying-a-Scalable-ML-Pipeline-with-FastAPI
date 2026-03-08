@@ -33,21 +33,21 @@ def main():
 
     # 3️⃣ Process training data
     X_train, y_train, encoder, lb = process_data(
-        train,
-        categorical_features=cat_features,
-        label="salary",
-        training=True
-    )
+    train,
+    categorical_features=cat_features,
+    label="salary",
+    training=True
+)
 
     # 4️⃣ Process test data
     X_test, y_test, _, _ = process_data(
-        test,
-        categorical_features=cat_features,
-        label="salary",
-        training=False,
-        encoder=encoder,
-        lb=lb
-    )
+    test,
+    categorical_features=cat_features,
+    label="salary",
+    training=False,
+    encoder=encoder,
+    lb=lb
+)
 
     # 5️⃣ Train model
     model = train_model(X_train, y_train)
