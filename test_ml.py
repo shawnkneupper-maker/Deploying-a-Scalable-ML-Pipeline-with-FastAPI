@@ -55,7 +55,8 @@ def test_train_model_returns_logistic_regression():
         label="salary",
         training=True
     )
-    model = train_model(X, y)
+    model_tuple = train_model(X, y)
+    model = model_tuple[0]  # get the LogisticRegression object
     assert isinstance(model, LogisticRegression), "Model should be LogisticRegression"
 
 
