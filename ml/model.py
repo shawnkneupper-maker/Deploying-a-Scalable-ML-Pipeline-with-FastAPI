@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ml/model.py
 import joblib
 from sklearn.preprocessing import StandardScaler
@@ -13,6 +14,18 @@ def train_model(X_train, y_train):
     """
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X_train)
+=======
+from sklearn.metrics import fbeta_score, precision_score, recall_score
+
+
+def train_model(X_train, y_train):
+    """Trains a machine learning model."""
+    from sklearn.linear_model import LogisticRegression
+
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X_train, y_train)
+    return model
+>>>>>>> cfb8f02 (Fix FastAPI inference, update ml/model.py, complete API functionality)
 
     model = LogisticRegression(max_iter=2000)  # increase iterations
     model.fit(X_scaled, y_train)
@@ -32,12 +45,20 @@ def inference(model_scaler, X):
 
 # Compute metrics
 def compute_model_metrics(y, preds):
+<<<<<<< HEAD
     """
     Compute precision, recall, fbeta with zero_division=1
     """
     precision = precision_score(y, preds, zero_division=1)
     recall = recall_score(y, preds, zero_division=1)
     fbeta = fbeta_score(y, preds, beta=1, zero_division=1)
+=======
+    """Compute precision, recall and fbeta."""
+    precision = precision_score(y, preds)
+    recall = recall_score(y, preds)
+    fbeta = fbeta_score(y, preds, beta=1)
+
+>>>>>>> cfb8f02 (Fix FastAPI inference, update ml/model.py, complete API functionality)
     return precision, recall, fbeta
 
 # Save model + scaler + encoders
@@ -48,6 +69,7 @@ def save_model(model_scaler, encoder, lb):
     joblib.dump(encoder, "model/encoder.pkl")
     joblib.dump(lb, "model/lb.pkl")
 
+<<<<<<< HEAD
 # Load model + scaler + encoders
 def load_model():
     model = joblib.load("model/model.pkl")
@@ -55,3 +77,10 @@ def load_model():
     encoder = joblib.load("model/encoder.pkl")
     lb = joblib.load("model/lb.pkl")
     return (model, scaler), encoder, lb
+=======
+def inference(model, X):
+    """Run model inference."""
+    preds = model.predict(X)
+    return preds
+>>>>>>> cfb8f02 (Fix FastAPI inference, update ml/model.py, complete API functionality)
+
