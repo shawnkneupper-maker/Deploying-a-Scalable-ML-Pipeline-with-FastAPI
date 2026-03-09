@@ -73,4 +73,7 @@ def predict(data: CensusInput):
 
     result = lb.inverse_transform(pred)[0]
 
+<<<<<<< HEAD
+    return {"prediction": result}
+=======
     return {"prediction": result}
