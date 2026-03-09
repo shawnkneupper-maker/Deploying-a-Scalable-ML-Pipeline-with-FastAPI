@@ -35,4 +35,12 @@ response = requests.post(
 )
 
 print("Status Code:", response.status_code)
+<<<<<<< HEAD
+print("Result:", response.json())
+=======
+print("Result:", response.json())
+>>>>>>> cfb8f02 (Fix FastAPI inference, update ml/model.py, complete API functionality)
+
+
+print("Status Code:", response.status_code)
 print("Result:", response.json())
