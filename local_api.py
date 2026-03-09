@@ -1,16 +1,16 @@
 import requests
 
-# URL of the running API
 url = "http://127.0.0.1:8000"
 
-# ✅ GET request
-response = requests.get(url + "/")
+# Test GET
 print("GET request")
+response = requests.get(url)
 print("Status Code:", response.status_code)
 print("Result:", response.json())
 
-# ✅ POST request
-sample_input = {
+
+# Correct input format
+input_data = {
     "age": 39,
     "workclass": "State-gov",
     "fnlgt": 77516,
@@ -27,7 +27,12 @@ sample_input = {
     "native_country": "United-States"
 }
 
-response = requests.post(url + "/predict", json=sample_input)
 print("\nPOST request")
+
+response = requests.post(
+    f"{url}/predict",
+    json=input_data
+)
+
 print("Status Code:", response.status_code)
 print("Result:", response.json())
